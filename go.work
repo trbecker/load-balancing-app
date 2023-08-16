@@ -1,7 +1,7 @@
 go 1.19
 
 use (
-	./lbctl
+	./intentctl
 	./datamodel
 	./intentstore
 	./smoapp

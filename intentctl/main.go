@@ -23,10 +23,10 @@ func CreateIntent() error {
 	flagMaximumUEPerCell := createIntentCmd.Int("maximum-ue-per-cell", -1,
 		"maximum ue per cell")
 	flagMaximumAssciationRate :=
-		createIntentCmd.Int("maximum-association-acceptance-rate", -1,
+		createIntentCmd.Int("maximum-association-rate", -1,
 			"maximum number of associations accepted per second")
 
-	createIntentCmd.Parse(os.Args[3:])
+	createIntentCmd.Parse(os.Args[2:])
 
 	var intent = datamodel.Intent{
 		Name: *flagName,
@@ -80,7 +80,7 @@ func ListIntents() error {
 func IntentShow() error {
 	intentShowCmd := flag.NewFlagSet("intent show", flag.PanicOnError)
 	flagIdx := intentShowCmd.Int("intent", -1, "id of the intent")
-	intentShowCmd.Parse(os.Args[3:])
+	intentShowCmd.Parse(os.Args[2:])
 
 	intent, err := client.IntentShow(*flagIdx)
 	if err == nil {
@@ -92,7 +92,7 @@ func IntentShow() error {
 func IntentDelete() error {
 	intentDeleteCmd := flag.NewFlagSet("intent delete", flag.PanicOnError)
 	flagIdx := intentDeleteCmd.Int("intent", -1, "intent to delete")
-	intentDeleteCmd.Parse(os.Args[3:])
+	intentDeleteCmd.Parse(os.Args[2:])
 
 	err := client.IntentDelete(*flagIdx)
 
@@ -104,7 +104,7 @@ func IntentDelete() error {
 }
 
 func IntentCmd() error {
-	switch os.Args[2] {
+	switch os.Args[1] {
 	case "create":
 		return CreateIntent()
 	case "list":
@@ -119,11 +119,7 @@ func IntentCmd() error {
 }
 
 func main() {
-	var err error
-	switch os.Args[1] {
-	case "intent":
-		err = IntentCmd()
-	}
+	err := IntentCmd()
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "command failed %s", err)
