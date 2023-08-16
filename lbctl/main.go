@@ -12,13 +12,18 @@ import (
 func CreateIntent() error {
 	createIntentCmd := flag.NewFlagSet("create", flag.PanicOnError)
 	flagName := createIntentCmd.String("name", "undefined", "mnemonic for the intent")
-	flagMinimumCellOffset := createIntentCmd.Int("minimum-cell-offset", 0, "minimum cell offset")
-	flagMaximumCellOffset := createIntentCmd.Int("maximum-cell-offset", 0, "maximum cell offset")
-	flagMaximumLoadAverage := createIntentCmd.Int("maximum-load", 0, "maximum cell load average")
-	flagMinimumThroughput := createIntentCmd.Int("minimum-throughput", 0, "minimum throughput per ue")
-	flagMaximumUEPerCell := createIntentCmd.Int("maximum-ue-per-cell", 0, "maximum ue per cell")
-	flagMaximumAssciationAcceptancePerSecond :=
-		createIntentCmd.Int("maximum-association-acceptance-rate", 0,
+	flagMinimumCellOffset := createIntentCmd.Int("minimum-cell-offset", -1,
+		"minimum cell offset")
+	flagMaximumCellOffset := createIntentCmd.Int("maximum-cell-offset", -1,
+		"maximum cell offset")
+	flagMaximumLoadAverage := createIntentCmd.Int("maximum-load", -1,
+		"maximum cell load average")
+	flagMinimumThroughput := createIntentCmd.Int("minimum-throughput", -1,
+		"minimum throughput per ue")
+	flagMaximumUEPerCell := createIntentCmd.Int("maximum-ue-per-cell", -1,
+		"maximum ue per cell")
+	flagMaximumAssciationRate :=
+		createIntentCmd.Int("maximum-association-acceptance-rate", -1,
 			"maximum number of associations accepted per second")
 
 	createIntentCmd.Parse(os.Args[3:])
@@ -27,28 +32,28 @@ func CreateIntent() error {
 		Name: *flagName,
 	}
 
-	if *flagMinimumCellOffset > 0 {
-		intent.AddParameter(datamodel.NewMinimumCellOffset(*flagMinimumCellOffset))
+	if *flagMinimumCellOffset >= 0 {
+		intent.SetMinimumCellOffset(*flagMinimumCellOffset)
 	}
 
-	if *flagMaximumCellOffset > 0 {
-		intent.AddParameter(datamodel.NewMaximumCellOffset(*flagMaximumCellOffset))
+	if *flagMaximumCellOffset >= 0 {
+		intent.SetMaximumCellOffset(*flagMaximumCellOffset)
 	}
 
-	if *flagMaximumLoadAverage > 0 {
-		intent.AddParameter(datamodel.NewMaximumLoadAverage(*flagMaximumLoadAverage))
+	if *flagMaximumLoadAverage >= 0 {
+		intent.SetMaximumLoadAverage(*flagMaximumLoadAverage)
 	}
 
-	if *flagMinimumThroughput > 0 {
-		intent.AddParameter(datamodel.NewMinimumThroughput(*flagMinimumThroughput))
+	if *flagMinimumThroughput >= 0 {
+		intent.SetMinimumThroughput(*flagMinimumThroughput)
 	}
 
-	if *flagMaximumUEPerCell > 0 {
-		intent.AddParameter(datamodel.NewMaximumUEPerCell(*flagMaximumUEPerCell))
+	if *flagMaximumUEPerCell >= 0 {
+		intent.SetMaximumUEPerCell(*flagMaximumUEPerCell)
 	}
 
-	if *flagMaximumAssciationAcceptancePerSecond > 0 {
-		intent.AddParameter(datamodel.NewMaximumAssociationRate(*flagMaximumAssciationAcceptancePerSecond))
+	if *flagMaximumAssciationRate >= 0 {
+		intent.SetMaximumAssociationRate(*flagMaximumAssciationRate)
 	}
 
 	intentID, err := client.IntentCreate(intent)
