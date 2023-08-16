@@ -57,7 +57,6 @@ func IntentCreate(intent datamodel.Intent) (int, error) {
 }
 
 func IntentDelete(idx int) error {
-
 	if idx < 0 {
 		fmt.Fprintf(os.Stderr, "invalid intent %d", idx)
 		return fmt.Errorf("inavlid intent %d", idx)
