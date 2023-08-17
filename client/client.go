@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/trbecker/lbapp/datamodel"
+	"golang.org/x/exp/slog"
 )
 
 type Client struct {
@@ -29,7 +29,7 @@ func (client *Client) IntentCreate(intent datamodel.Intent) (int, error) {
 
 	marshal, err := json.Marshal(intent_create)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to marshal intent (%s)", err)
+		slog.Error("failed to marshal intent (%s)", err)
 		return -1, err
 	}
 
@@ -37,13 +37,13 @@ func (client *Client) IntentCreate(intent datamodel.Intent) (int, error) {
 		fmt.Sprintf("http://%s/intent", client.Uri),
 		bytes.NewReader(marshal))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create request (%s)", err)
+		slog.Error("failed to create request (%s)", err)
 		return -1, err
 	}
 
 	res, err := SendCommand(req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to send intent (%s)", err)
+		slog.Error("failed to send intent (%s)", err)
 		return -1, err
 	}
 
@@ -52,7 +52,7 @@ func (client *Client) IntentCreate(intent datamodel.Intent) (int, error) {
 		var response datamodel.IntentResponse
 		err = json.NewDecoder(res.Body).Decode(&response)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to parse response (%s)", err)
+			slog.Error("failed to parse response (%s)", err)
 			return -1, err
 		}
 		return response.IntentID, nil
@@ -64,20 +64,20 @@ func (client *Client) IntentCreate(intent datamodel.Intent) (int, error) {
 
 func (client *Client) IntentDelete(idx int) error {
 	if idx < 0 {
-		fmt.Fprintf(os.Stderr, "invalid intent %d", idx)
+		slog.Error("invalid intent %d", idx)
 		return fmt.Errorf("inavlid intent %d", idx)
 	}
 
 	req, err := http.NewRequest("DELETE",
 		fmt.Sprintf("http://%s/intent/%d", client.Uri, idx), nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create delete request %s", err)
+		slog.Error("failed to create delete request %s", err)
 		return err
 	}
 
 	res, err := SendCommand(req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to send delete command %s", err)
+		slog.Error("failed to send delete command %s", err)
 		return err
 	}
 
@@ -95,7 +95,7 @@ func (client *Client) IntentShow(idx int) (*datamodel.Intent, error) {
 
 	res, err := http.Get(fmt.Sprintf("http://%s/intent/%d", client.Uri, idx))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get intent %s", err)
+		slog.Error("failed to get intent %s", err)
 		return nil, err
 	}
 
@@ -108,7 +108,7 @@ func (client *Client) IntentShow(idx int) (*datamodel.Intent, error) {
 func (client *Client) IntentList() ([]datamodel.Intent, error) {
 	res, err := http.Get(fmt.Sprintf("http://%s/intents", client.Uri))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "unable to obtain intent list (%s)", err)
+		slog.Error("unable to obtain intent list (%s)", err)
 		return nil, err
 	}
 
@@ -116,7 +116,7 @@ func (client *Client) IntentList() ([]datamodel.Intent, error) {
 
 	err = json.NewDecoder(res.Body).Decode(&intents)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to parse the received response  (%s)", err)
+		slog.Error("failed to parse the received response (%s)", err)
 		return nil, err
 	}
 
