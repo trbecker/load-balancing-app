@@ -7,11 +7,13 @@ import (
 
 	"github.com/trbecker/lbapp/client"
 	"github.com/trbecker/lbapp/datamodel"
+	"golang.org/x/exp/slog"
 )
 
 var (
-	_flagURI = flag.String("uri", "localhost:8080", "server uri")
-	_client  client.Client
+	_flagURI   = flag.String("uri", "localhost:8080", "server uri")
+	_flagDebug = flag.Bool("debug", false, "enable debugging log")
+	_client    client.Client
 )
 
 func CreateIntent(args []string) error {
@@ -104,11 +106,27 @@ func IntentDelete(args []string) error {
 }
 
 func main() {
+	// Parse the command line options
 	flag.Parse()
 	_client = client.Client{
 		Uri: *_flagURI,
 	}
 
+	// Setup the logger
+	var logLevel = slog.LevelError
+	if *_flagDebug {
+		logLevel = slog.LevelDebug
+	}
+
+	handlerOptions := slog.HandlerOptions{
+		Level: logLevel,
+	}
+	handler := slog.NewTextHandler(os.Stderr, &handlerOptions)
+	slog.SetDefault(slog.New(handler))
+
+	slog.Debug("Logger created")
+
+	// Execute the command
 	command, args := flag.Args()[0], flag.Args()[1:]
 	var err error
 	switch command {
