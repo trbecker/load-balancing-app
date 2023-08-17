@@ -3,11 +3,13 @@
 
 ## Usage
  ```
- intentctl <command> <options>
+ intentctl <global options> <command> <options>
  ```
 
- Command can be one of
+### Global options
+  - `--uri <server uri>` Defines the server uri (default `localhost:8080`)
 
+### Commands
    - `create`: creates a new intent. See below for the creation parameters.
    - `list`: list currently created intents.
    - `show`: shows an intent. Takes one argument `--intent <id>` where id is the intent id returned from`create` or `list`.

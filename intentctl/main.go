@@ -9,7 +9,12 @@ import (
 	"github.com/trbecker/lbapp/datamodel"
 )
 
-func CreateIntent() error {
+var (
+	_flagURI = flag.String("uri", "localhost:8080", "server uri")
+	_client  client.Client
+)
+
+func CreateIntent(args []string) error {
 	createIntentCmd := flag.NewFlagSet("create", flag.PanicOnError)
 	flagName := createIntentCmd.String("name", "undefined", "mnemonic for the intent")
 	flagMinimumCellOffset := createIntentCmd.Int("minimum-cell-offset", -1,
@@ -26,7 +31,7 @@ func CreateIntent() error {
 		createIntentCmd.Int("maximum-association-rate", -1,
 			"maximum number of associations accepted per second")
 
-	createIntentCmd.Parse(os.Args[2:])
+	createIntentCmd.Parse(args)
 
 	var intent = datamodel.Intent{
 		Name: *flagName,
@@ -56,9 +61,9 @@ func CreateIntent() error {
 		intent.SetMaximumAssociationRate(*flagMaximumAssciationRate)
 	}
 
-	intentID, err := client.IntentCreate(intent)
+	intentID, err := _client.IntentCreate(intent)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create intent %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to create intent %s\n", err)
 		return err
 	}
 	fmt.Printf("Created intent '%s' with id %d\n", intent.Name, intentID)
@@ -66,7 +71,7 @@ func CreateIntent() error {
 }
 
 func ListIntents() error {
-	intents, err := client.IntentList()
+	intents, err := _client.IntentList()
 
 	if err == nil {
 		for _, intent := range intents {
@@ -77,51 +82,52 @@ func ListIntents() error {
 	return nil
 }
 
-func IntentShow() error {
+func IntentShow(args []string) error {
 	intentShowCmd := flag.NewFlagSet("intent show", flag.PanicOnError)
 	flagIdx := intentShowCmd.Int("intent", -1, "id of the intent")
-	intentShowCmd.Parse(os.Args[2:])
+	intentShowCmd.Parse(args)
 
-	intent, err := client.IntentShow(*flagIdx)
+	intent, err := _client.IntentShow(*flagIdx)
 	if err == nil {
 		fmt.Println(intent)
 	}
 	return err
 }
 
-func IntentDelete() error {
+func IntentDelete(args []string) error {
 	intentDeleteCmd := flag.NewFlagSet("intent delete", flag.PanicOnError)
 	flagIdx := intentDeleteCmd.Int("intent", -1, "intent to delete")
-	intentDeleteCmd.Parse(os.Args[2:])
+	intentDeleteCmd.Parse(args)
 
-	err := client.IntentDelete(*flagIdx)
+	err := _client.IntentDelete(*flagIdx)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to delete intent %s", err)
+		fmt.Fprintln(os.Stderr, "failed to delete intent")
 	}
 
 	return err
 }
 
-func IntentCmd() error {
-	switch os.Args[1] {
-	case "create":
-		return CreateIntent()
-	case "list":
-		return ListIntents()
-	case "show":
-		return IntentShow()
-	case "delete":
-		return IntentDelete()
+func main() {
+	flag.Parse()
+	_client = client.Client{
+		Uri: *_flagURI,
 	}
 
-	return nil
-}
-
-func main() {
-	err := IntentCmd()
+	command, args := flag.Args()[0], flag.Args()[1:]
+	var err error
+	switch command {
+	case "create":
+		err = CreateIntent(args)
+	case "list":
+		err = ListIntents()
+	case "show":
+		err = IntentShow(args)
+	case "delete":
+		err = IntentDelete(args)
+	}
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "command failed %s", err)
+		fmt.Fprintf(os.Stderr, "command failed %s\n", err)
 	}
 }
