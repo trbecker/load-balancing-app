@@ -63,7 +63,6 @@ func CreateIntent(args []string) error {
 
 	intentID, err := _client.IntentCreate(intent)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create intent %s\n", err)
 		return err
 	}
 	fmt.Printf("Created intent '%s' with id %d\n", intent.Name, intentID)
@@ -100,10 +99,6 @@ func IntentDelete(args []string) error {
 	intentDeleteCmd.Parse(args)
 
 	err := _client.IntentDelete(*flagIdx)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "failed to delete intent")
-	}
 
 	return err
 }
