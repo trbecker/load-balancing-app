@@ -79,7 +79,7 @@ func ListIntents() error {
 		}
 	}
 
-	return nil
+	return err
 }
 
 func IntentShow(args []string) error {
