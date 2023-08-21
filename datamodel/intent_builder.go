@@ -1,31 +1,36 @@
 package datamodel
 
 func (i *Intent) SetMinimumCellOffset(offset int) *Intent {
-	i.AddParameter(NewMinimumCellOffset(offset))
+	i.MinimumCellOffset = &offset
+	return i
+}
+
+func (i *Intent) UnsetMinimumCellOffset(offset int) *Intent {
+	i.MinimumCellOffset = nil
 	return i
 }
 
 func (i *Intent) SetMaximumCellOffset(offset int) *Intent {
-	i.AddParameter(NewMaximumCellOffset(offset))
+	i.MaximumCellOffset = &offset
 	return i
 }
 
 func (i *Intent) SetMaximumLoadAverage(loadAverage int) *Intent {
-	i.AddParameter(NewMaximumLoadAverage(loadAverage))
+	i.MaximumLoadAverage = &loadAverage
 	return i
 }
 
 func (i *Intent) SetMinimumThroughput(throughput int) *Intent {
-	i.AddParameter(NewMinimumThroughput(throughput))
+	i.MinimumThroughput = &throughput
 	return i
 }
 
 func (i *Intent) SetMaximumUEPerCell(maximumUEPerCell int) *Intent {
-	i.AddParameter(NewMaximumUEPerCell(maximumUEPerCell))
+	i.MaximumUEPerCell = &maximumUEPerCell
 	return i
 }
 
 func (i *Intent) SetMaximumAssociationRate(associationRate int) *Intent {
-	i.AddParameter(NewMaximumAssociationRate(associationRate))
+	i.MaximumAssociationRate = &associationRate
 	return i
 }
