@@ -1,0 +1,60 @@
+\input{stylesheet}
+
+\node (json) [draw,circle,contribution] at (0,0) {};
+\node (jsonlabel) [above = .2em of json] {JSON Interface};
+\node (smoapp) [component, contribution, below = 4em of json] {Intent Receiver};
+\node (messagequeue) [component, cots, below = of smoapp] {Message Queue};
+
+\node (rapp) [component,contribution,rapp position] {Intent Broker};
+\node (servicegw) [component,oran,below = of rapp] {Service Exposure Gateway};
+\node (a1policymanagement) [component,onap,below = of servicegw] {A1 Policy Management};
+\node (a1adapter) [component,onap,below = of a1policymanagement] {A1 Adapter};
+
+\node (a1mediator) [component,oran,a1mediator position] {A1 Mediator};
+\node (xapp) [component,contribution,right = of a1mediator] {xApp};
+\node (submgr) [component,oran,below = of xapp] {Subscription Manager};
+\node (e2term) [component,oran,below = of submgr] {E2 Terminal};
+\node (rnib) [component,oran,below = of a1mediator] {rNIB};
+
+\node (e2node) [component,oran,below = of e2term] {E2 Node};
+\node (rrc) [component,ran,left = of e2node] {RRC};
+
+\node (nonrtriclbl) [above = .2em of rapp,label] {Non-RT RIC};
+\node (smolbl) [label] at ($(messagequeue.south|-a1adapter.east)$) {SMO};
+\node (nearrtriclbl) [label] at ($(rnib.south|-e2term.east)$) {Near-RT RIC};
+\node (nodeblbl) [label,below = 2em of rrc.east] {NodeB};
+
+% Legend
+\node (oranstyle) [component label,oran,below = 5em of e2node.east,shift={(-1em,0)}] {};
+\node (oranlbl) [legend label,left = .5em of oranstyle] {O-RAN SC Components};
+\node (onapstyle) [component label,onap,below = .1em of oranstyle] {};
+\node (onaplbl) [legend label,left = .5em of onapstyle] {ONAP Components};
+\node (cotsstyle) [component label,cots,below = .1em of onapstyle] {};
+\node (cotslbl) [legend label,left = .5em of cotsstyle] {ONAP Components};
+\node (contributionstyle) [component label,contribution,below = .1em of cotsstyle] {};
+\node (contributionlbl) [legend label,left = .5em of contributionstyle] {Contributed Components};
+\node (ranstyle) [component label,ran,below = .1em of contributionstyle] {};
+\node (ranlbl) [legend label,left = .5em of ranstyle] {Network Function};
+
+
+\begin{scope}[on background layer]
+	\node[fit=(rapp)(servicegw)(a1policymanagement)(a1adapter)(nonrtriclbl)] (nonrtricp) {};
+	\node[fit=(nonrtricp)(smoapp)(messagequeue)(smolbl),container,smo] (smo) {};
+	\node[fit=(rapp)(servicegw)(a1policymanagement)(a1adapter)(nonrtriclbl),container,nonrtric] (nonrtric) {};
+	\node[fit=(a1mediator)(xapp)(submgr)(e2term)(rnib)(nearrtriclbl),container,nearrtric] (nearrtirc) {};
+	\node[fit=(rrc)(e2node)(nodeblbl),container,nodeb] (nodeb) {};
+	\node[fit=(oranstyle)(ranlbl)(contributionlbl),draw,rectangle] {};
+\end{scope}
+
+\path[draw,-latex] (json) -- (smoapp);
+\path[draw,-latex] (smoapp) -- (messagequeue);
+\path[draw,latex-latex] (rapp) -- (servicegw);
+\path[draw,-latex] (servicegw) -- (a1policymanagement);
+\path[draw,-latex] (a1policymanagement) -- (a1adapter);
+\path[draw,-latex] ([shift={(0,.4em)}] a1mediator.east) -- ([shift={(0,.4em)}] xapp.west);
+\path[draw,latex-latex] (xapp) -- (submgr);
+\path[draw,latex-latex] (submgr) -- (e2term);
+\path[draw,latex-latex] (e2term) -- (e2node);
+\path[draw,latex-latex] (e2node) -- (rrc);
+
+\path[draw,latex-latex] ([shift={(0,-.4em)}] xapp.west) -- ([shift={(-.75em,-.4em)}] xapp.west) -- ([shift={(.75em,0)}] rnib.east) -- (rnib.east);

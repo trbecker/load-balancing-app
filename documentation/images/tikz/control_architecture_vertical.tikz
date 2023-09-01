@@ -1,0 +1,9 @@
+\tikzstyle{rapp position}=[left = of smoapp]
+\tikzstyle{a1mediator position}=[below = 4em of a1adapter]
+
+\begin{tikzpicture}[node distance = 1.5em, thick]
+	\input{control_architecture}
+
+	\path[draw,-latex] (a1adapter.south) -- (a1mediator.north);
+	\path[draw,-latex] (messagequeue.west) -- ([shift={(-.5em,0)}] messagequeue.west) -- ([shift={(1em,0)}] rapp.east) -- (rapp.east);
+\end{tikzpicture}

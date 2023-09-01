@@ -1,0 +1,13 @@
+\tikzstyle{rapp position}=[above = of opentelemetrynonrtric]
+\tikzstyle{vescollector position}=[below = of opentelemetrydatasource]
+\tikzstyle{vespamanager position}=[below = 4em of vescollector]
+\tikzstyle{legend position}=[below = 5em of e2node.east,shift={(-1em,0)}]
+
+\begin{tikzpicture}[node distance = 1.5em, thick]
+	\input{monitoring_architecture}
+	\draw[-latex] (vescollector.west) --
+		([shift={(-1em,0)}] vescollector.west) --
+		([shift={(-1em,0)}] datariver.west) --
+		(datariver.west);
+
+\end{tikzpicture}

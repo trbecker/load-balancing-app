@@ -1,0 +1,94 @@
+\input{stylesheet}
+
+\tikzstyle{fitnonrtric}=[fit=(rapp)(opentelemetrynonrtric)(nonrtriclbl)]
+\tikzstyle{fitsmo}=[fit=(nonrtricp)(smoapp)(monitoringp)(vescollector)]
+\tikzstyle{fittelemetry}=[fit=(opentelemetrydatasource)(datariver)(dataconfluence)(datalake)(dataviewer)(telemetrylbl)]
+\tikzstyle{fitnearrtrictelemetry}=[fit=(vespamanager)(opentelemetrynearrtric)(opentelemetryalert)]
+
+\tikzstyle{opentelemetryalert position}=[right = of vespamanager]
+\tikzstyle{xapp position}=[left = of opentelemetrynearrtric]
+\tikzstyle{e2node position}=[right = of rrc]
+\tikzstyle{rrc position}=[below = of e2term]
+\tikzstyle{nodeblbl position}=[below = .2em of e2node]
+
+\node (opentelemetrydatasource) [component, contribution] {Data Source}; 
+\node (datariver) [component, cots, above = of opentelemetrydatasource] {Data River};
+\node (dataconfluence) [component, peer contribution, above = of datariver] {Data Confluence};
+\node (datalake) [component, cots, above = of dataconfluence] {Data Lake};
+\node (dataviewer) [component, cots, above = of datalake] {Data Viewpoint};
+
+\node (opentelemetrysmo) [component, cots, left = of opentelemetrydatasource] {OpenTelemetry Collector (SMO)};
+\node (smoapp) [component, contribution, above = of opentelemetrysmo] {Intent Receiver};
+\node (persistency) [component,cots,above = of smoapp] {Parsistent Database};
+
+\node (opentelemetrynonrtric) [component, cots, right = 3em of opentelemetrydatasource] {OpenTelemetry Collector (Non-RT RIC)};
+\node (rapp) [component,contribution,rapp position] {Intent Broker};
+\node (vescollector) [component,peer contribution,vescollector position] {VES Collector};
+
+\node (vespamanager) [component,onap,vespamanager position] {VESPA Manager};
+\node (opentelemetryalert) [component,cots,opentelemetryalert position] {OpenTelemetry Alerts};
+\node (opentelemetrynearrtric) [component,cots,below = of opentelemetryalert] {OpenTelemetry Collector (Near-RT RIC)};
+\node (xapp) [component,contribution,xapp position] {xApp};
+\node (submgr) [component,oran,below = of xapp] {Subscription Manager};
+\node (e2term) [component,oran,below = of submgr] {E2 Terminal};
+
+\node (rrc) [component,ran,rrc position] {RRC};
+\node (e2node) [component,oran,e2node position] {E2 Node};
+
+\node (nonrtriclbl) [above = .2em of rapp,label] {Non-RT RIC};
+\node (telemetrylbl) [above = .2em of dataviewer,label] {Monitoring};
+\node (nodeblbl) [label,nodeblbl position] {NodeB};
+%
+%% Legend
+\node (oranstyle) [component label,oran,legend position] {};
+\node (oranlbl) [legend label,left = .5em of oranstyle] {O-RAN SC Components};
+\node (onapstyle) [component label,onap,below = .1em of oranstyle] {};
+\node (onaplbl) [legend label,left = .5em of onapstyle] {ONAP Components};
+\node (cotsstyle) [component label,cots,below = .1em of onapstyle] {};
+\node (cotslbl) [legend label,left = .5em of cotsstyle] {ONAP Components};
+\node (contributionstyle) [component label,contribution,below = .1em of cotsstyle] {};
+\node (contributionlbl) [legend label,left = .5em of contributionstyle] {Contributed Components};
+\node (ranstyle) [component label,ran,below = .1em of contributionstyle] {};
+\node (ranlbl) [legend label,left = .5em of ranstyle] {Network Function};
+\node (peerstyle) [component label,peer contribution,below = .1em of ranstyle] {};
+\node (peerlbl) [legend label,left = .5em of peerstyle] {Peer Contribution};
+
+\begin{scope}[on background layer]
+	\node[fitnonrtric] (nonrtricp) {};
+	\node[fittelemetry] (monitoringp) {};
+	\node[fitsmo,container,smo] (smo) {};
+	\node[fitnonrtric,container,nonrtric] (nonrtric) {};
+	\node[fittelemetry,container,monitoring] (monitoring) {};
+	\node[fitnearrtrictelemetry] (nearrtrictelemetry) {};
+	\node[fit=(xapp)(submgr)(e2term)(nearrtrictelemetry),container,nearrtric] (nearrtric) {};
+	\node[fit=(rrc)(e2node)(nodeblbl),container,nodeb] (nodeb) {};
+	\node[fit=(oranstyle)(peerlbl)(contributionlbl),draw,rectangle,fill=white] {};
+\end{scope}
+
+\path let \p1 = ([shift={(-2em,-1em)}] smo.north east) in node[label] at (\x1,\y1) {SMO};
+\path let \p1 = ([shift={(-4em,1em)}] nearrtric.south east) in node[label] at (\x1,\y1) {Near-RT RIC};
+
+
+\draw[-latex] (rapp) -- (opentelemetrynonrtric);
+\draw[-latex] (opentelemetrynonrtric) -- (opentelemetrydatasource);
+\draw[-latex] (smoapp) -- (opentelemetrysmo);
+\draw[latex-latex] (smoapp) -- (persistency);
+\draw[-latex] (opentelemetrysmo) -- (opentelemetrydatasource);
+
+\draw[-latex] (opentelemetrydatasource) -- (datariver);
+\draw[-latex] (datariver) -- (dataconfluence);
+\draw[-latex] (dataconfluence) -- (datalake);
+\draw[-latex] (datalake) -- (dataviewer);
+\draw[-latex] (vespamanager) -- (vescollector);
+\draw[-latex] (vespamanager) -- (opentelemetryalert);
+\draw[-latex] (opentelemetrynearrtric) -- (opentelemetryalert);
+\draw[-latex] (xapp) -- (opentelemetrynearrtric);
+\draw[-latex] (e2term) -- (submgr);
+\draw[-latex] (rrc) -- (e2node);
+\draw[-latex] (submgr) -- (xapp);
+\draw[-latex] ([shift={(-1em,0em)}] opentelemetrynearrtric.north) --
+	([shift={(-1em,.75em)}] opentelemetrynearrtric.north) --
+	([shift={(0,-.75em)}] vespamanager.south) --
+	(vespamanager.south);
+\draw[-latex] (submgr.east) -- ($(opentelemetrynearrtric.south|-submgr.east)$) -- (opentelemetrynearrtric);
+\draw[-latex] ([shift={(0em,.7em)}] e2node.west) -- ([shift={(-.75em,.7em)}] e2node.west) -- ([shift={(.75em,0)}] e2term.east) -- (e2term.east);

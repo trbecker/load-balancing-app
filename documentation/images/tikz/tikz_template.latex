@@ -1,0 +1,19 @@
+\documentclass[crop,tikz]{standalone}
+\usepackage{graphicx}
+\usepackage{empheq}
+\usepackage[most]{tcolorbox}
+\usetikzlibrary{positioning,shapes,arrows.meta,tikzmark,calc,fit,backgrounds}
+
+\begin{document}
+\tikzstyle{fillcolor1} = [fill=green!20]
+\tikzstyle{fillcolor2} = [fill=red!20]
+\tikzstyle{fillcolor3} = [fill=orange!20]
+\tikzstyle{fillcolor4} = [fill=blue!20]
+\tikzstyle{fillcolor5} = [fill=blue!40]
+
+\tikzstyle{color1} = [black!20!red]
+\tikzstyle{color2} = [black!60!green]
+\tikzstyle{color3} = [black!30!blue]
+
+\input{\inputfile}
+\end{document}
