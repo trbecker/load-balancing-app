@@ -1,0 +1,115 @@
+@startuml IntentToAdmissionControl
+!pragma teoz true
+participant operator as "Operator"
+box SMO
+    participant intent_receiver as "Intent Receiver"
+    box Non-RT RIC
+        participant intent_broker as "Intent  Broker"
+    end box
+end box
+
+box Near-RT RIC
+    box "Admission Control"
+        participant admission_control_main as "Main Thread"
+        participant admission_control_thread as "Control Thread"
+        participant admission_control_data as "Data Thread"
+    end box
+end box
+
+box NodeB
+    participant rrc as "RRC"
+    participant kpi as "E2SM KPI"
+end box
+
+note over operator
+No domingo pela manhã, na orla do guaíba, 
+garantir que o load average das cells esteja abaixo de 100
+end note
+
+==  Initializtion ==
+operator -> intent_receiver: JSON: Intent
+activate intent_receiver
+note left
+{
+    "filters":  {
+        "domain": "Orla do Gauíba",
+        "when": {
+            "day_of_the_week": "Sunday",
+            "time_of_day": "Morning"
+        }
+    },
+    "parameters": {
+        "load_average_max": 100
+    }
+}
+end note
+
+intent_receiver -> intent_receiver: Break intents into policies
+intent_receiver --> operator: Success
+note over intent_receiver, kpi: On Sunday Morning
+
+loop #LightSlateGrey for each Near-RT RIC in domain "Orla do Guiba"
+    intent_receiver -> intent_broker: Send policies*
+    deactivate intent_receiver
+    note right
+    Policy
+    [
+        {
+            "condition": {
+                "load_average_above": 100,
+                "domain": "Orla  do Guaiba"
+            },
+            "parameters": {
+                "admit_ue": false
+            }
+        },
+        {
+            "condition": {
+                "load_average_below": 100,
+                "domain": "Orla do Guaiba"
+            },
+
+            "parameters": {
+                "admit_ue": true
+            }
+        }
+    ]
+    end note
+
+== Policy Setting ==
+
+
+    intent_broker -> admission_control_main: A1: Send policies
+    activate admission_control_main
+end
+group #LightCoral for each NodeB in domain "Orla do Gauiba"
+    admission_control_main -> admission_control_data: Signal New Policy
+    admission_control_data -> kpi: E2 SUBSCRIBE\n(Admission Control Counters)
+    loop #LightGrey (Async) Data Reporting
+        kpi -> admission_control_data: E2 REPORT\n(Admission Control Counters)
+    end
+
+    alt #LightBlue RRC is intelligent
+        admission_control_main -> rrc: E2 POLICY\n(Define conditions and limits)
+    else #Pink RRC is not  intelligent
+        admission_control_main -> admission_control_thread **: Instantiate\n(E2 Node to Control)
+        deactivate admission_control_main
+        admission_control_thread -> rrc: E2 SUBSCRIBE\n(New UE event)
+        group #LightGreen Data Feed
+            admission_control_thread -> admission_control_data: Subcribe to data feed
+            loop 
+                admission_control_data -> admission_control_thread: Data
+            end
+        end
+        loop #LightGrey Control Loop
+            rrc -> admission_control_thread: E2 INSERT\n(New UE)
+            admission_control_thread -> admission_control_thread: Evaluate admission
+            alt #SkyBlue UE can be admitted
+                admission_control_thread -> rrc: E2 CONTROL ALLOW
+            else #SeaGreen  UE can't be admitted
+                admission_control_thread -> rrc: E2 CONTROL DENY
+            end
+        end
+    end
+end
+@enduml

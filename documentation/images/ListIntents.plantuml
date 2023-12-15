@@ -1,0 +1,30 @@
+@startuml RetrieveIntent
+!pragma teoz true
+participant operator as "Operator"
+box "SMO"
+    participant smoapp as "Intent\nReceiver" #LightGreen
+    participant database as "Persistent\nDatabase"
+'    participant messagebroker as "Message\nBroker"
+'    box "Non-RT RIC"
+'        participant intent_broker as "Intent\nBroker" #LightGreen
+'        boundary a1_interface as "A1 Interface"
+'    end box
+end box
+
+'box "Near-RT RIC"
+'    participant a1_mediator as "A1 Mediator"
+'    participant xapp as "xApp" #LightGreen
+'end box
+
+== List Intents ==
+operator -> smoapp: HTTP GET /intents
+smoapp <-> database: query active intents
+alt database query returned
+    operator <- smoapp: HTTP 200 OK
+else database connection error
+    operator <- smoapp: HTTP 503 Service Unavailable
+else database returned error
+    operator <- smoapp: HTTP 500 Internal Server Error
+end
+
+@enduml

@@ -106,7 +106,7 @@ func (client *Client) IntentShow(idx int) (*datamodel.Intent, error) {
 }
 
 func (client *Client) IntentList() ([]datamodel.Intent, error) {
-	res, err := http.Get(fmt.Sprintf("http://%s/intents", client.Uri))
+	res, err := http.Get(fmt.Sprintf("http://%s/intent", client.Uri))
 	if err != nil {
 		slog.Error("unable to obtain intent list (%s)", err)
 		return nil, err

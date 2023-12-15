@@ -1,0 +1,53 @@
+@startuml CreateIntent
+!pragma teoz true
+participant operator as "Operator"
+box "SMO"
+    participant smoapp as "Intent\nReceiver" #LightGreen
+    participant database as "Persistent\nDatabase"
+    participant messagebroker as "Message\nBroker"
+    box "Non-RT RIC"
+        participant intent_broker as "Intent\nBroker" #LightGreen
+        boundary a1_interface as "A1 Interface"
+    end box
+end box
+
+box "Near-RT RIC"
+    participant a1_mediator as "A1 Mediator"
+    participant xapp as "xApp" #LightGreen
+end box
+
+== Intent reception ==
+operator -> smoapp: POST /intent
+activate smoapp
+smoapp <-> database: check if token exists
+alt token exists
+    operator <-- smoapp: HTTP 409 Conflict
+end
+
+note over smoapp: sanity check
+alt sanity check fails
+    operator <-- smoapp: HTTP 400 Bad Request
+end
+
+group transaction
+    note over smoapp
+        start transaction
+    end note
+    smoapp <-> messagebroker: publish Intent
+    smoapp <-> database: persist Intent
+    alt Intent published and persisted
+        operator <-- smoapp: HTTP 201 Created
+        note over smoapp: complete transaction
+    else component connection failed
+        operator <-- smoapp: HTTP 503 Service Unavailable
+        note over smoapp: rollback transaction
+    else component returned error
+        operator <-- smoapp: HTTP 500 Internal Server Error
+        note over smoapp: rollback transaction
+    end
+end
+deactivate smoapp
+
+== Intent Processing ==
+
+@enduml

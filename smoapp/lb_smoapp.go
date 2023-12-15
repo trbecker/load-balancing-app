@@ -17,7 +17,7 @@ func main() {
 	intentStore = intentstore.NewMemoryTable()
 	r := mux.NewRouter()
 	r.HandleFunc("/intent", IntentCreate).Methods("POST")
-	r.HandleFunc("/intents", IntentList).Methods("GET")
+	r.HandleFunc("/intent", IntentList).Methods("GET")
 	r.HandleFunc("/intent/{idx}", IntentShow).Methods("GET")
 	r.HandleFunc("/intent/{idx}", IntentDelete).Methods("DELETE")
 

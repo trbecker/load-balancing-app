@@ -1,9 +1,10 @@
 go 1.19
 
 use (
-	./intentctl
+	./client
 	./datamodel
+	./extra/studies
+	./intentctl
 	./intentstore
 	./smoapp
-	./client
 )

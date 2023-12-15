@@ -1,0 +1,82 @@
+@startuml Set
+skinparam componentStyle rectangle
+interface "JSON" as json
+
+component intentctl
+
+frame Legend {
+	component "Contributed components" #LightGreen
+	component "ONAP components" #LightBlue
+	component "ORAN SC components" #LightSalmon
+	component "COTS components" #LightGrey
+	component "Peer Contributed" #SteelBlue
+}
+
+component SMO {
+	component "Load Balancing Intent Receiver" as intent_receiver <<SMO App>> #LightGreen
+	component "Minimal SMO" {
+		component "Zookeeper" #LightGrey
+		component "Kafdrop" #LightGrey
+		component "Kafka" as kafka #LightGrey
+		component "VES Collector" as ves_collector #SteelBlue
+		component "InfluxDB Connector" as idb_connector #SteelBlue
+		component "InfluxDB" as idb #LightGrey
+		component "Chronograf" as chronograf #LightGrey
+		component "Persistent Database" as persistent_db #LightGrey
+	}
+
+	component "Non-RT RIC" {
+		component "Load Balancing Policy Broker" as policy_broker_rapp <<rApp>> #LightGreen
+		component "Service Exposure Gateway" as service_exposure_gateway #LightSalmon
+		component "A1 Policy Management" as a1_policy_management #LightBlue
+		component "A1 Adapter" as a1_adapter #LightBlue
+		component "rApp Catalog" as rapp_catalog #LightSalmon
+		component "Control Panel" as control_panel #LightSalmon
+		component "Information Coodinator Service" #LightSalmon
+	}
+
+	json <--> intent_receiver #Red: HTTP
+	intent_receiver -> kafka #Red
+	policy_broker_rapp <-- kafka #Red
+	policy_broker_rapp <--> service_exposure_gateway #Red
+	service_exposure_gateway  --> a1_policy_management #Red
+	a1_policy_management --> a1_adapter #Red
+}
+
+component "Near-RT RIC" {
+	component "A1 Mediator" as a1_mediator_ricplt <<ricplt>> #LightSalmon
+	component {
+		component "Admission Control" as ad_control_xapp <<xApp>> #LightGreen
+		component "Mobility Load Balancing Control" as mlb_control_xapp <<xApp>> #LightGreen
+		component "Traffic Steering Control" as ts_control_xapp <<xApp>> #LightGreen
+	}
+	component "Monitoring xApp" as monitor_xapp <<xApp>> #LightGreen
+	component "rNIB" as rnib_ricplt <<ricplt>> #LightSalmon
+	component "E2 Terminator"  as e2term <<ricplt>> #LightSalmon
+	component "Routing Manager" as routing_manager <<ricplt>> #LightSalmon
+	component "Subscription Manager" as subscription_manager <<ricplt>> #LightSalmon
+
+	component "Prometheus" as prometheus #LightGrey
+	component "Alert Manager" as alert_manager #LightGrey
+	component "VESPA Manager" as vespa_manager #LightBlue
+
+	a1_adapter --> a1_mediator_ricplt #Red: A1
+	
+	a1_mediator_ricplt --> ad_control_xapp #Red
+	a1_mediator_ricplt --> mlb_control_xapp #Red
+	a1_mediator_ricplt --> ts_control_xapp #Red
+
+	ad_control_xapp <--> subscription_manager #Red
+	ts_control_xapp <--> subscription_manager #Red
+	mlb_control_xapp <--> subscription_manager #Red
+
+	subscription_manager <--> e2term #Red
+}
+
+component "NodeB" {
+	component "Radio Resource Control" as rrc_nf <<Network Function>> #LightGreen
+	e2term <--> rrc_nf #Red: E2
+}
+
+remove @unlinked
+@enduml

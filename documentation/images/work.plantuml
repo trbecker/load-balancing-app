@@ -1,0 +1,65 @@
+@startwbs
+<style>
+.done {
+    BackgroundColor LightGreen
+}
+.optional {
+    BackgroundColor LightBlue
+}
+</style>
+* lbapp
+** General
+***_ Install  infrastructure (Gabriela?)
+
+** Intent Receiver
+*** Implement JSON interface <<done>>
+***_ Implement Persistency
+***_ Implement Kafka Interfacing
+
+** Intent Broker rApp
+***_ Kafka Interface
+***_ Intent breakdown interface
+***_ Service Exposure Gateway Interface
+
+** Admission Control Function
+*** Intent Broker rApp
+****_ Implement Borker Logic
+*** Admission Control xApp
+****_ Policy Sending Logic
+****_ Subscription/Control Logic
+*** Intelligent Radio Resource Control
+****_ Implement maximum UE function
+****_ Implement maximum assiciation rate function
+****_ Implement the corrent associated UE value
+****_ Implement the association request counter
+****_ Implement the association request accepted counter
+
+** Mobility Load Balancing Function
+*** Intent Broker rApp
+****_ Implement Broker Logic
+*** Mobility Load Balancing Control xApp
+****_ Policy Sending Logic
+****_ Subscription/Control Logic
+*** Intelligent Radio Resource Control
+****_ Implement Threshold Setting
+**** Implement LTE UE A1 Receiver (statistics only) <<optional>>
+**** Implement LTE UE A2 Receiver (statistics only) <<optional>>
+****_ Implement LTE UE A3 Receiver
+**** Implement LTE UE A4 Receiver (statistics only) <<optional>>
+**** Implement LTE UE A5 Receiver (statistics only) <<optional>>
+**** Implement LTE UE B1 Receiver (statistics only) <<optional>>
+**** Implement LTE UE B2 Receiver (statistics only) <<optional>>
+****_ Implement handover logic
+
+** Traffic Steering Function
+*** Intent Broker rApp
+****_ Implement Broker Logic
+*** Mobility Load Balancing Control xApp
+****_ Policy Sending Logic
+****_ Subscription/Control Logic
+*** Intelligent Radio Resource Control
+****_ Implement handowver logic
+
+** Solution validation (Gabriela?)
+
+@endwbs

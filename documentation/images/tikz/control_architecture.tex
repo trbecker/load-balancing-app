@@ -4,6 +4,7 @@
 \node (jsonlabel) [above = .2em of json] {JSON Interface};
 \node (smoapp) [component, contribution, below = 4em of json] {Intent Receiver};
 \node (messagequeue) [component, cots, below = of smoapp] {Message Queue};
+\node (persistentdatabase) [component, cots, below = of messagequeue] {Persistent Database};
 
 \node (rapp) [component,contribution,rapp position] {Intent Broker};
 \node (servicegw) [component,oran,below = of rapp] {Service Exposure Gateway};
