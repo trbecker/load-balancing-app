@@ -5,6 +5,7 @@ import openapi_client as e2sim_client
 
 speed_of_light = 299792485
 MHz = 1000000
+kHz = 1000
 minute = 60
 
 class experiment:
@@ -129,7 +130,7 @@ if __name__ == '__main__':
             except Exception as e:
                 print("ManagementApi.u_eimsi_admission_put: %s\n" % e)
 
-    subcarrier_spacing = 240
+    subcarrier_spacing = 240 * kHz
     n_ues = 10000
     n_cells = 6
     update_time_minute = 2 
