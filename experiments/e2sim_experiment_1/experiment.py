@@ -7,6 +7,7 @@ speed_of_light = 299792485
 MHz = 1000000
 kHz = 1000
 minute = 60
+k_b = 1.380649e-23 # Boltzmann contant
 
 class experiment:
     def __init__(self, n_ues, n_cells, subcarrier_spacing):
@@ -34,7 +35,7 @@ class experiment:
         return pos
 
     def move_ues(self):
-        self.ue_positions += np.random.uniform(0, 1, (self.n_ues, 1, 3))
+        self.ue_positions += np.random.uniform(0, 1, self.ue_positions.shape)
 
 
     def add_cell(self, cell_location, cell_power, cell_frequency, cell_bw, cell_gain):
@@ -55,16 +56,26 @@ class experiment:
         distances = np.reshape(np.linalg.norm(self.ue_positions - self.cell_positions, axis = 2), (self.n_ues, self.n_cells, 1))
 
         power_rx = (self.cell_power * self.cell_gains * self.ue_gains) * (self.cell_wave_lengths / (4 * np.pi * distances)) ** 2
+        noise = k_b * np.random.normal(300, 1, self.ue_gains.shape) * self.subcarrier_spacing
         power_rx_sum = np.sum(power_rx, axis=2)
         power_rx_sum = np.reshape(power_rx_sum, (power_rx_sum.shape[0], power_rx_sum.shape[1], 1))
         power_rx_avg = power_rx_sum / power_rx.shape[2]
+        snr = 10 * np.log10(power_rx_avg / noise)
+        bw = 12 * 240000 * np.log2(1 + power_rx_avg / noise) / 1024 / 1024
         path_losses_lin = self.cell_power / power_rx_avg
         path_losses_db = 10 * self.gamma * np.log10(path_losses_lin)
         shadowing = np.random.normal(0, 7.9, path_losses_db.shape)
         path_losses_db += shadowing
-        rssi = 10 * np.log10(self.cell_power) - path_losses_db
+        # From http://4g5gworld.com/blog/5gnr-reference-signals-measurement
+        rsrp = 10 * np.log10(self.cell_power) - path_losses_db
+        print(np.mean(rsrp), np.mean(snr), np.mean(bw))
+        # RSSI is calculated from the formula RSRP = RSSI - 10 * log_{10} (12 * N) [RSSI = RSRP + log_{10} (12 * N)], with N the number of resource blocks.
+        # N is dependent on UE_BW (N = BW / (12 * subcarrier_spacing)). We will assume N = 1 for this test case.
+        rssi = rsrp + 10 * np.log10(12)
+        #RSRQ is calculate as RSRQ = (N * RSRP) / RSSI
+        rsrq = rsrp / rssi
 
-        return rssi
+        return rsrp, snr, rsrq
 
 if __name__ == '__main__':
     def grandstand_height(m):
@@ -107,15 +118,15 @@ if __name__ == '__main__':
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname)
 
-    def _anr(bbu, rssi):
-        return e2sim_client.AnrPayload(nodeb=bbu, rsrp=rssi, rsrq=0, sinr=0, cqi=0, bler=0)
+    def _anr(bbu, rsrp, snr, rsrq):
+        return e2sim_client.AnrPayload(nodeb=bbu, rsrp=rsrp, rsrq=rsrq, sinr=snr, cqi=0, bler=0)
 
     def random_flow():
         return e2sim_client.DataPlaneFlow(average_throughput=np.random.randint(0, 1000000), latency=np.random.uniform(0, 20))
 
 
     def create_ue(ue_number, bbu_values):
-        anr_values = [_anr(bbu, rssi) for bbu, rssi in bbu_values]
+        anr_values = [_anr(bbu, rsrp, snr, rsrq) for bbu, rsrp, snr, rsrq in bbu_values]
         flow =  random_flow()
         ip = _get_endpoint_ip()
         return e2sim_client.UeDescriptor(data_plane_flow = flow, anr_payload = anr_values, endpoint = f"http://{ip}:8081/{ue_number}")
@@ -145,11 +156,11 @@ if __name__ == '__main__':
     antennae = [exp.add_cell((x, y, 25), 10, f, 100 * MHz, 8) for x, y, f in zip(antenna_xs, antenna_ys, dl_channels_f)]
     
     ues = [exp.add_ue(random_position(), 2) for i in range(n_ues)]
-    rssi = np.reshape(exp._simulate(), (len(ues), len(antennae)))
-
-    first_connect_channels = np.argmax(rssi, axis=1)
+    rsrp, snr, rsrq = exp._simulate()
+    rsrp = np.reshape(rsrp, (n_ues, n_cells))
+    snr = np.reshape(snr, (n_ues, n_cells))
+    rsrq = np.reshape(rsrq, (n_ues, n_cells))
     bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=f'ant_{aid}') for aid in antennae]
-    bbu_per_ue = [bbu_descriptors[i] for i in first_connect_channels]
 
     configuration = e2sim_client.Configuration(host="http://10.88.0.15:8081/v1")
     api_client = e2sim_client.ApiClient(configuration)
@@ -160,8 +171,8 @@ if __name__ == '__main__':
     print("Connecting UEs")
 
     start = time.time()
-    for ue, channel in zip(ues, first_connect_channels):
-        bbu_values = [(bbu_descriptors[i], rssi[ue, i]) for i in range(len(bbu_descriptors))]
+    for ue in ues:
+        bbu_values = [(bbu_descriptors[i], rsrp[ue, i], snr[ue, i], rsrq[ue, i]) for i in range(len(bbu_descriptors))]
         ue_descr = create_ue(ue, bbu_values)
         ue_descriptors.append(ue_descr)
 
@@ -181,9 +192,12 @@ if __name__ == '__main__':
         print("Updating anr")
         start = time.time()
         exp.move_ues()
-        rssi = np.reshape(exp._simulate(), (len(ues), len(antennae)))
+        rsrp, snr, rsrq = exp._simulate()
+        rsrp = np.reshape(rsrp, (n_ues, n_cells))
+        snr = np.reshape(snr, (n_ues, n_cells))
+        rsrq = np.reshape(rsrq, (n_ues, n_cells))
         for ue in ues:
-            ue_descriptors[ue].anr_payload = [_anr(bbu_descriptors[i], rssi[ue, i]) for i in range(len(bbu_descriptors))]
+            ue_descriptors[ue].anr_payload = [_anr(bbu_descriptors[i], rsrp[ue, i], snr[ue, i], rsrq[ue, i]) for i in range(len(bbu_descriptors))]
             ue_descriptors[ue].data_plane_flow = random_flow()
             try:
                 management_api.u_eimsi_anr_put(f'{ue}', 
@@ -196,6 +210,3 @@ if __name__ == '__main__':
         end = time.time()
         ellapsed = end - start
         print(f"Finished ANR updates, ellapsed time: {ellapsed}")
-
-
-
