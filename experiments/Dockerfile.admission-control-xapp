@@ -1,0 +1,19 @@
+FROM ubuntu:20.04
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    cmake build-essential autoconf libtool pkg-config git \
+    libgrpc++-dev libprotobuf-dev protobuf-c-compiler \
+    protobuf-compiler libsqlite3-dev && apt-get clean
+
+RUN rm -fr /playpen && mkdir /playpen
+WORKDIR /playpen
+
+RUN git clone --depth 1 https://github.com/trbecker/admission-control-grpc.git /acgrpc \
+    && mkdir -p /acgrpc/server/build && cd /acgrpc/server/build && cmake .. && make && make install \
+    && cd && rm -fr /acgrpc/
+
+COPY xapp /playpen/
+COPY intent/ /playpen/intent/
+RUN mkdir /playpen/build && cd /playpen/build && cmake .. && make && make install
+
+ENTRYPOINT [ "/usr/local/bin/xapp" ]

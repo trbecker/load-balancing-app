@@ -1,0 +1,6 @@
+FROM docker.io/trbecker/envman-client:0.0.1
+
+RUN pip install numpy pandas
+COPY e2sim_experiment_2 /playpen/
+
+CMD sleep 1000000000000

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package intent;
+
+service Intent {
+    rpc setIntent(IntentRequest) returns (IntentResponse) {} 
+}
+
+message IntentRequest {
+    int64 id = 1;
+    int64 limitUEAdmitted = 2;
+    int64 limitUEAdmissionPerSecond = 3;
+}
+
+message IntentResponse {
+    int64 id = 1;
+    bool status = 2;
+}

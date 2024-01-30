@@ -32,7 +32,6 @@ class AdmissionControlXapp(Xapp):
     def run(self):
         print("AdmissionControlXapp starting")
         while self._keepgoing:
-            print("Begginnig of the loop")
             try:
                 summary, buf = self._rmr_loop.rcv_queue.get(block=True, timeout=self.rmr_timeout)
                 if not self.rmr_handler(summary, buf):

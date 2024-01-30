@@ -1,0 +1,6 @@
+FROM ubuntu:20.04
+
+RUN mkdir /src && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    protobuf-compiler-grpc protobuf-compiler protobuf-c-compiler && apt-get clean
+
+WORKDIR /src/

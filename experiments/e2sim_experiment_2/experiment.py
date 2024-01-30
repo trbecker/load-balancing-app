@@ -86,6 +86,8 @@ class experiment:
         return rsrp, snr, rsrq, bler, cqi
 
 if __name__ == '__main__':
+    from multiprocessing.pool import ThreadPool, Pool
+
     def grandstand_height(m):
         height = m * 10 / 42
         if m > 21:
@@ -139,16 +141,6 @@ if __name__ == '__main__':
         ip = _get_endpoint_ip()
         return e2sim_client.UeDescriptor(data_plane_flow = flow, anr_payload = anr_values, endpoint = f"http://{ip}:8081/{ue_number}")
 
-    def ue_connect(server_url, imsi, ue):
-        configuration = e2sim_client.Configuration(
-                host = server_url)
-        with e2sim_client.ApiClient(configuration) as api_client:
-            api_instance = e2sim_client.ManagementApi(api_client)
-            try:
-                api_instance.u_eimsi_admission_put(imsi, ue)
-            except Exception as e:
-                print("ManagementApi.u_eimsi_admission_put: %s\n" % e)
-
     subcarrier_spacing = 240 * kHz
     n_ues = 10000
     n_cells = 6
@@ -162,59 +154,77 @@ if __name__ == '__main__':
     dl_channels_f = ([ (7175 + 100 * n) * MHz for n in range(10) ] * (len(antenna_ys) // 6 + 6))[0:len(antenna_ys)]
 
     antennae = [exp.add_cell((x, y, 25), 10, f, 100 * MHz, 8) for x, y, f in zip(antenna_xs, antenna_ys, dl_channels_f)]
-    
+
+
     ues = [exp.add_ue(random_position(), 2) for i in range(n_ues)]
-    rsrp, snr, rsrq = exp._simulate()
+    # rsrp, snr, rsrq, bler, cqi
+    rsrp, snr, rsrq, _, _ = exp._simulate()
     rsrp = np.reshape(rsrp, (n_ues, n_cells))
     snr = np.reshape(snr, (n_ues, n_cells))
     rsrq = np.reshape(rsrq, (n_ues, n_cells))
-    bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=f'ant_{aid}') for aid in antennae]
-
-    configuration = e2sim_client.Configuration(host="http://10.88.0.15:8081/v1")
-    api_client = e2sim_client.ApiClient(configuration)
-    management_api = e2sim_client.ManagementApi(api_client)
-
+    bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=f'gnb{aid + 1}') for aid in antennae]
+ 
     ue_descriptors = list()
 
-    print("Connecting UEs")
+    print("Starting connection test")
 
-    start = time.time()
-    for ue in ues:
-        bbu_values = [(bbu_descriptors[i], rsrp[ue, i], snr[ue, i], rsrq[ue, i]) for i in range(len(bbu_descriptors))]
-        ue_descr = create_ue(ue, bbu_values)
-        ue_descriptors.append(ue_descr)
+    ant_endpoints = [
+        'http://10.88.1.79:8081/v1',
+        'http://10.88.1.80:8081/v1',
+        'http://10.88.1.81:8081/v1',
+        'http://10.88.1.82:8081/v1',
+        'http://10.88.1.83:8081/v1',
+        'http://10.88.1.84:8081/v1',
+    ]
 
-        try:
-            management_api.u_eimsi_admission_put(f'{ue}', ue_descr)
-        except Exception as e:
-            print(f'ManagementApi.u_eimsi_admission_put: {e}')
+    def connect_task(ue):
+        connected = False
 
-    end = time.time()
-    ellapsed = end - start
-    print(f"Finished connecting UEs, ellapsed time: {ellapsed}")
+        latencies = list()
 
+        snr_ue = snr[ue]
+        bbu_order = list(snr_ue.argsort())
 
-    print(f"Starting ANR and flow updates every {update_time_minute} minute")
-    while True:
-        time.sleep(update_time_minute * minute - ellapsed)
-        print("Updating anr")
-        start = time.time()
-        exp.move_ues()
-        rsrp, snr, rsrq = exp._simulate()
-        rsrp = np.reshape(rsrp, (n_ues, n_cells))
-        snr = np.reshape(snr, (n_ues, n_cells))
-        rsrq = np.reshape(rsrq, (n_ues, n_cells))
-        for ue in ues:
-            ue_descriptors[ue].anr_payload = [_anr(bbu_descriptors[i], rsrp[ue, i], snr[ue, i], rsrq[ue, i]) for i in range(len(bbu_descriptors))]
-            ue_descriptors[ue].data_plane_flow = random_flow()
+        while not connected:
+            time.sleep(random.random())
+            bbu_values = [(bbu_descriptors[i], rsrp[ue, i], snr_ue[i], rsrq[ue, i]) for i in range(len(bbu_descriptors))]
+            ue_descr = create_ue(ue, bbu_values)
+            ue_descriptors.append(ue_descr)
+
+            if not bbu_order:
+                bbu_order = list(snr_ue.argsort())
+
+            connection_bbu = bbu_order.pop()
+            print(f"connecting ue 724011{ue:09} to antenna {connection_bbu}")
+            configuration = e2sim_client.Configuration(host=ant_endpoints[connection_bbu])
+            api_client = e2sim_client.ApiClient(configuration)
+            management_api = e2sim_client.ManagementApi(api_client)
+
+            start = time.monotonic_ns()
             try:
-                management_api.u_eimsi_anr_put(f'{ue}', 
-                            e2sim_client.UEIMSIAnrPutRequest(nodeb_list=ue_descriptors[ue].anr_payload))
-                management_api.u_eimsi_flow_put(f'{ue}', 
-                            e2sim_client.UEIMSIFlowPutRequest(flow=ue_descriptors[ue].data_plane_flow))
+                management_api.u_eimsi_admission_put(f'724011{ue:09}', ue_descr)
+                latency = time.monotonic_ns() - start
+                connected = True
             except Exception as e:
-                print(f'Failed to update ue {ue}: {e}')
+                latency = time.monotonic_ns() - start
+            
+            cbbu = bbu_values[connection_bbu]
+            values = f'724011{ue:09},{cbbu[0].nodeb_id},{latency},{cbbu[2]},{connected}'
+            print(values)
+            latencies.append(values)
+            print(f'{ue} connected')
+                
 
-        end = time.time()
-        ellapsed = end - start
-        print(f"Finished ANR updates, ellapsed time: {ellapsed}")
+        return latencies
+
+    def flatten(l):
+        flat = list()
+        for row in l:
+            flat += row
+
+        return flat
+
+    pool = ThreadPool(processes=100)
+    latencies = flatten(pool.map(connect_task, ues))
+    with open('/data/latencies.txt', 'w+') as fp:
+        fp.writelines([f'{l}\n' for l in latencies])
