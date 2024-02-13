@@ -15,5 +15,6 @@ RUN git clone --depth 1 https://github.com/trbecker/admission-control-grpc.git /
 COPY xapp /playpen/
 COPY intent/ /playpen/intent/
 RUN mkdir /playpen/build && cd /playpen/build && cmake .. && make && make install
+RUN mkdir /data
 
 ENTRYPOINT [ "/usr/local/bin/xapp" ]

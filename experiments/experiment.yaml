@@ -1,0 +1,337 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: admission-control-xapp
+  labels:
+    app: admission-control-xapp
+spec:
+  hostname: admission-control-xapp
+  containers:
+    - name: admission-control-xapp
+      image: docker.io/trbecker/admission-control-xapp:latest
+      imagePullPolicy: Always
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admission-control
+spec:
+  type: ClusterIP
+  selector:
+    app: admission-control-xapp
+  ports:
+    - name: admission-service
+      port: 50101
+      targetPort: 50101
+      protocol: TCP
+    - name: intent-service
+      port: 50102
+      targetPort: 50102
+      protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2node-gnb1
+  labels:
+    app: e2node-gnb1
+spec:
+  hostname: e2node-gnb1
+  containers:
+    - name: gnb1
+      image: docker.io/trbecker/e2node:latest
+      imagePullPolicy: Always
+      command: ['/usr/local/bin/simulator']
+      args: ['-s', 'admission-control:50101', '-i', 'gnb1']
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb1
+spec:
+  type: ClusterIP
+  selector:
+    app: e2node-gnb1
+  ports:
+    - name: envman
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2node-gnb2
+  labels:
+    app: e2node-gnb2
+spec:
+  hostname: e2node-gnb2
+  containers:
+    - name: gnb2
+      image: docker.io/trbecker/e2node:latest
+      imagePullPolicy: Always
+      command: ['/usr/local/bin/simulator']
+      args: ['-s', 'admission-control:50101', '-i', 'gnb2']
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb2
+spec:
+  type: ClusterIP
+  selector:
+    app: e2node-gnb2
+  ports:
+    - name: envman
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2node-gnb3
+  labels:
+    app: e2node-gnb3
+spec:
+  hostname: e2node-gnb3
+  containers:
+    - name: gnb3
+      image: docker.io/trbecker/e2node:latest
+      imagePullPolicy: Always
+      command: ['/usr/local/bin/simulator']
+      args: ['-s', 'admission-control:50101', '-i', 'gnb3']
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb3
+spec:
+  type: ClusterIP
+  selector:
+    app: e2node-gnb3
+  ports:
+    - name: envman
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2node-gnb4
+  labels:
+    app: e2node-gnb4
+spec:
+  hostname: e2node-gnb4
+  containers:
+    - name: gnb4
+      image: docker.io/trbecker/e2node:latest
+      imagePullPolicy: Always
+      command: ['/usr/local/bin/simulator']
+      args: ['-s', 'admission-control:50101', '-i', 'gnb4']
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb4
+spec:
+  type: ClusterIP
+  selector:
+    app: e2node-gnb4
+  ports:
+    - name: envman
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2node-gnb5
+  labels:
+    app: e2node-gnb5
+spec:
+  hostname: e2node-gnb5
+  containers:
+    - name: gnb5
+      image: docker.io/trbecker/e2node:latest
+      imagePullPolicy: Always
+      command: ['/usr/local/bin/simulator']
+      args: ['-s', 'admission-control:50101', '-i', 'gnb5']
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb5
+spec:
+  type: ClusterIP
+  selector:
+    app: e2node-gnb5
+  ports:
+    - name: envman
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2node-gnb6
+  labels:
+    app: e2node-gnb6
+spec:
+  hostname: e2node-gnb6
+  containers:
+    - name: gnb6
+      imagePullPolicy: Always
+      image: docker.io/trbecker/e2node:latest
+      command: ['/usr/local/bin/simulator']
+      args: ['-s', 'admission-control:50101', '-i', 'gnb6']
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb6
+spec:
+  type: ClusterIP
+  selector:
+    app: e2node-gnb6
+  ports:
+    - name: envman
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-envman
+data:
+  application.yaml: |-
+    ues: 
+      quantity: 10000
+
+    antennae:
+      - name: "gnb1"
+        endpoint: "http://gnb1:8081/v1"
+        location: [47.0, 47.0, 25.0]
+        numerology: 4
+        frequency: 7175 # MHz
+        power: 10 # W
+        gain: 8
+        bandwidth: 100 # MHz
+
+      - name: "gnb2"
+        endpoint: "http://gnb2:8081/v1"
+        location: [47.0, 87.0, 25.0]
+        numerology: 4
+        frequency: 7275
+        power: 10 # W
+        gain: 8
+        bandwidth: 100 # MHz
+
+      - name: "gnb3"
+        endpoint: "http://gnb3:8081/v1"
+        location: [47.0, 127.0, 25.0]
+        numerology: 4
+        frequency: 7375
+        power: 10 # W
+        gain: 8
+        bandwidth: 100 # MHz
+
+      - name: "gnb4"
+        endpoint: "http://gnb4:8081/v1"
+        location: [157.0, 47.0, 25.0]
+        numerology: 4
+        frequency: 7475
+        power: 10 # W
+        gain: 8
+        bandwidth: 100 # MHz
+
+      - name: "gnb5"
+        endpoint: "http://gnb5:8081/v1"
+        location: [157.0, 87.0, 25.0]
+        numerology: 4
+        frequency: 7575
+        power: 10 # W
+        gain: 8
+        bandwidth: 100 # MHz
+
+      - name: "gnb6"
+        endpoint: "http://gnb6:8081/v1"
+        location: [157.0, 127.0, 25.0]
+        numerology: 4
+        frequency: 7675
+        power: 10 # W
+        gain: 8
+        bandwidth: 100 # MHz
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: envman-sbrc-24
+  labels:
+    app: envman-sbrc-24
+spec:
+  hostname: envman-sbrc-24
+  volumes:
+    - name: configmap-volume
+      configMap:
+        name: configmap-envman
+  containers:
+    - name: environment-manager
+      image: docker.io/trbecker/sbrc-24:latest
+      imagePullPolicy: Always
+      volumeMounts:
+        - name: configmap-volume
+          mountPath: /etc/config/configmap
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: intentctl
+  labels:
+    app: intentctl
+spec:
+  hostname: intentctl
+  containers:
+    - name: intentctl
+      image: docker.io/trbecker/intentctl
+      imagePullPolicy: Always
+      resources:
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"

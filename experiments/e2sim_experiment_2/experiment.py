@@ -2,6 +2,7 @@ import numpy as np
 import random
 import time
 import openapi_client as e2sim_client
+import yaml
 
 speed_of_light = 299792485
 MHz = 1000000
@@ -10,7 +11,7 @@ minute = 60
 k_b = 1.380649e-23 # Boltzmann contant
 
 class experiment:
-    def __init__(self, n_ues, n_cells, subcarrier_spacing):
+    def __init__(self, n_ues, n_cells):
         self.n_ues = n_ues
         self.n_cells = n_cells
         self.ue_positions = np.zeros((n_ues, 1, 3))
@@ -19,9 +20,9 @@ class experiment:
         self.cell_gains = np.zeros((1, n_cells, 1))
         self.cell_wave_lengths = np.zeros((1, n_cells, 4))
         self.cell_power = np.zeros((1, n_cells, 1))
+        self.subcarrier_spacing = np.zeros((1, n_cells, 1))
         self.current_ue = 0
         self.current_cell = 0
-        self.subcarrier_spacing = subcarrier_spacing
 
         self.gamma = 1
 
@@ -38,19 +39,24 @@ class experiment:
         self.ue_positions += np.random.uniform(0, 1, self.ue_positions.shape)
 
 
-    def add_cell(self, cell_location, cell_power, cell_frequency, cell_bw, cell_gain):
+    def add_cell(self, ant):
         pos = self.current_cell
         self.current_cell += 1
 
-        self.cell_positions[0, pos] = cell_location
-        self.cell_gains[0, pos] = cell_gain
-        n_subcarriers = int(np.floor(cell_bw / self.subcarrier_spacing))
-        first_subcarrier = cell_frequency - cell_bw / 2 + self.subcarrier_spacing / 2
-        subcarriers = [first_subcarrier + sc * self.subcarrier_spacing for sc in range(n_subcarriers)]
-        self.cell_wave_lengths[0, pos] = speed_of_light / np.random.choice(subcarriers, replace=False, size=(4,))
-        self.cell_power[0, pos] = cell_power
+        ant['frequency'] = ant['frequency'] * MHz
+        ant['bandwidth'] = ant['bandwidth'] * MHz
+        ant['subcarrier_spacing'] = 15 * 2 ** ant['numerology'] * kHz
 
-        return pos
+        self.subcarrier_spacing[0, pos] = ant['subcarrier_spacing']
+        self.cell_positions[0, pos] = ant['location']
+        self.cell_gains[0, pos] = ant['gain']
+        n_subcarriers = int(np.floor(ant['bandwidth'] / ant['subcarrier_spacing']))
+        first_subcarrier = ant['frequency'] - ant['bandwidth'] / 2 + ant['subcarrier_spacing'] / 2
+        subcarriers = [first_subcarrier + sc * ant['subcarrier_spacing'] for sc in range(n_subcarriers)]
+        self.cell_wave_lengths[0, pos] = speed_of_light / np.random.choice(subcarriers, replace=False, size=(4,))
+        self.cell_power[0, pos] = ant['power']
+
+        return ant
 
     def _simulate(self):
         distances = np.reshape(np.linalg.norm(self.ue_positions - self.cell_positions, axis = 2), (self.n_ues, self.n_cells, 1))
@@ -87,6 +93,18 @@ class experiment:
 
 if __name__ == '__main__':
     from multiprocessing.pool import ThreadPool, Pool
+    import sys, yaml, getopt
+
+    configfile = '/etc/config/configmap/application.yaml'
+
+    opts, args = getopt.getopt(sys.argv[1:], 'c:')
+
+    for opt, arg in opts:
+        if opt == 'c':
+            configfile = arg
+
+    with open(configfile, 'r') as fp:
+        config = yaml.safe_load(fp)
 
     def grandstand_height(m):
         height = m * 10 / 42
@@ -141,20 +159,12 @@ if __name__ == '__main__':
         ip = _get_endpoint_ip()
         return e2sim_client.UeDescriptor(data_plane_flow = flow, anr_payload = anr_values, endpoint = f"http://{ip}:8081/{ue_number}")
 
-    subcarrier_spacing = 240 * kHz
-    n_ues = 10000
-    n_cells = 6
-    update_time_minute = 2 
-    exp = experiment(n_ues, n_cells, subcarrier_spacing)
+    n_ues = config['ues']['quantity']
+    n_cells = len(config['antennae'])
+    exp = experiment(n_ues, n_cells)
 
-    half_cells = int(n_cells / 2)
-
-    antenna_ys = [47 + 120 / half_cells * i for i in range(half_cells)] * 2
-    antenna_xs = [47] * half_cells +  [157] * half_cells
-    dl_channels_f = ([ (7175 + 100 * n) * MHz for n in range(10) ] * (len(antenna_ys) // 6 + 6))[0:len(antenna_ys)]
-
-    antennae = [exp.add_cell((x, y, 25), 10, f, 100 * MHz, 8) for x, y, f in zip(antenna_xs, antenna_ys, dl_channels_f)]
-
+    antennae = [exp.add_cell(antenna) for antenna in config['antennae']]
+    print(antennae)
 
     ues = [exp.add_ue(random_position(), 2) for i in range(n_ues)]
     # rsrp, snr, rsrq, bler, cqi
@@ -162,20 +172,13 @@ if __name__ == '__main__':
     rsrp = np.reshape(rsrp, (n_ues, n_cells))
     snr = np.reshape(snr, (n_ues, n_cells))
     rsrq = np.reshape(rsrq, (n_ues, n_cells))
-    bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=f'gnb{aid + 1}') for aid in antennae]
+    bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=antenna['name']) for antenna in antennae]
  
     ue_descriptors = list()
 
     print("Starting connection test")
 
-    ant_endpoints = [
-        'http://10.88.1.79:8081/v1',
-        'http://10.88.1.80:8081/v1',
-        'http://10.88.1.81:8081/v1',
-        'http://10.88.1.82:8081/v1',
-        'http://10.88.1.83:8081/v1',
-        'http://10.88.1.84:8081/v1',
-    ]
+    ant_endpoints = [ antenna['endpoint'] for antenna in antennae ]
 
     def connect_task(ue):
         connected = False
