@@ -10,10 +10,6 @@ spec:
     - name: admission-control-xapp
       image: docker.io/trbecker/admission-control-xapp:latest
       imagePullPolicy: Always
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -47,10 +43,6 @@ spec:
       imagePullPolicy: Always
       command: ['/usr/local/bin/simulator']
       args: ['-s', 'admission-control:50101', '-i', 'gnb1']
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -80,10 +72,6 @@ spec:
       imagePullPolicy: Always
       command: ['/usr/local/bin/simulator']
       args: ['-s', 'admission-control:50101', '-i', 'gnb2']
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -113,10 +101,6 @@ spec:
       imagePullPolicy: Always
       command: ['/usr/local/bin/simulator']
       args: ['-s', 'admission-control:50101', '-i', 'gnb3']
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -146,10 +130,6 @@ spec:
       imagePullPolicy: Always
       command: ['/usr/local/bin/simulator']
       args: ['-s', 'admission-control:50101', '-i', 'gnb4']
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -179,10 +159,6 @@ spec:
       imagePullPolicy: Always
       command: ['/usr/local/bin/simulator']
       args: ['-s', 'admission-control:50101', '-i', 'gnb5']
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -212,10 +188,6 @@ spec:
       image: docker.io/trbecker/e2node:latest
       command: ['/usr/local/bin/simulator']
       args: ['-s', 'admission-control:50101', '-i', 'gnb6']
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -314,10 +286,6 @@ spec:
       volumeMounts:
         - name: configmap-volume
           mountPath: /etc/config/configmap
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
 ---
 apiVersion: v1
 kind: Pod
@@ -331,7 +299,3 @@ spec:
     - name: intentctl
       image: docker.io/trbecker/intentctl
       imagePullPolicy: Always
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "256Mi"
