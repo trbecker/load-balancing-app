@@ -146,15 +146,24 @@ if __name__ == '__main__':
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname)
 
-    def _anr(bbu, rsrp, snr, rsrq):
-        return e2sim_client.AnrPayload(nodeb=bbu, rsrp=rsrp, rsrq=rsrq, sinr=snr, cqi=0, bler=0)
+    def to_int(value):
+        return int(np.floor(value))
+
+    def _anr(bbu, rsrp, snr, rsrq, cqi=0, bler=0):
+        return e2sim_client.AnrPayload(nodeb=bbu, 
+                rsrp=to_int(rsrp), 
+                rsrq=to_int(rsrq), 
+                sinr=to_int(snr), 
+                cqi=to_int(cqi),
+                bler=to_int(bler)
+        )
 
     def random_flow():
         return e2sim_client.DataPlaneFlow(average_throughput=np.random.randint(0, 1000000), latency=np.random.uniform(0, 20))
 
 
     def create_ue(ue_number, bbu_values):
-        anr_values = [_anr(bbu, rsrp, snr, rsrq) for bbu, rsrp, snr, rsrq in bbu_values]
+        anr_values = [_anr(bbu, rsrp, snr, rsrq, cqi, bler) for bbu, rsrp, snr, rsrq, cqi, bler in bbu_values]
         flow =  random_flow()
         ip = _get_endpoint_ip()
         return e2sim_client.UeDescriptor(data_plane_flow = flow, anr_payload = anr_values, endpoint = f"http://{ip}:8081/{ue_number}")
@@ -168,10 +177,11 @@ if __name__ == '__main__':
 
     ues = [exp.add_ue(random_position(), 2) for i in range(n_ues)]
     # rsrp, snr, rsrq, bler, cqi
-    rsrp, snr, rsrq, _, _ = exp._simulate()
+    rsrp, snr, rsrq, bler, cqi = exp._simulate()
     rsrp = np.reshape(rsrp, (n_ues, n_cells))
     snr = np.reshape(snr, (n_ues, n_cells))
     rsrq = np.reshape(rsrq, (n_ues, n_cells))
+    cqi = np.reshape(cqi, (n_ues, n_cells))
     bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=antenna['name']) for antenna in antennae]
  
     ue_descriptors = list()
@@ -190,7 +200,7 @@ if __name__ == '__main__':
 
         while not connected:
             time.sleep(random.random())
-            bbu_values = [(bbu_descriptors[i], rsrp[ue, i], snr_ue[i], rsrq[ue, i]) for i in range(len(bbu_descriptors))]
+            bbu_values = [(bbu_descriptors[i], rsrp[ue, i], snr_ue[i], rsrq[ue, i], cqi[ue, i], bler[ue]) for i in range(len(bbu_descriptors))]
             ue_descr = create_ue(ue, bbu_values)
             ue_descriptors.append(ue_descr)
 
