@@ -214,6 +214,7 @@ data:
 
     antennae:
       - name: "gnb1"
+        gnb_id: 1
         endpoint: "http://gnb1:8081/v1"
         location: [47.0, 47.0, 25.0]
         numerology: 4
@@ -223,6 +224,7 @@ data:
         bandwidth: 100 # MHz
 
       - name: "gnb2"
+        gnb_id: 2
         endpoint: "http://gnb2:8081/v1"
         location: [47.0, 87.0, 25.0]
         numerology: 4
@@ -232,6 +234,7 @@ data:
         bandwidth: 100 # MHz
 
       - name: "gnb3"
+        gnb_id: 3
         endpoint: "http://gnb3:8081/v1"
         location: [47.0, 127.0, 25.0]
         numerology: 4
@@ -241,6 +244,7 @@ data:
         bandwidth: 100 # MHz
 
       - name: "gnb4"
+        gnb_id: 4
         endpoint: "http://gnb4:8081/v1"
         location: [157.0, 47.0, 25.0]
         numerology: 4
@@ -250,6 +254,7 @@ data:
         bandwidth: 100 # MHz
 
       - name: "gnb5"
+        gnb_id: 5
         endpoint: "http://gnb5:8081/v1"
         location: [157.0, 87.0, 25.0]
         numerology: 4
@@ -259,6 +264,7 @@ data:
         bandwidth: 100 # MHz
 
       - name: "gnb6"
+        gnb_id: 6
         endpoint: "http://gnb6:8081/v1"
         location: [157.0, 127.0, 25.0]
         numerology: 4

@@ -66,6 +66,7 @@ class experiment:
         power_rx_sum = np.sum(power_rx, axis=2)
         power_rx_sum = np.reshape(power_rx_sum, (power_rx_sum.shape[0], power_rx_sum.shape[1], 1))
         power_rx_avg = power_rx_sum / power_rx.shape[2]
+        # SINR-Range in TS 38331 is INTEGER(0..127)
         snr = 10 * np.log10(power_rx_avg / noise)
         bw = 12 * 240000 * np.log2(1 + power_rx_avg / noise) / 1024 / 1024
         path_losses_lin = self.cell_power / power_rx_avg
@@ -73,12 +74,15 @@ class experiment:
         shadowing = np.random.normal(0, 7.9, path_losses_db.shape)
         path_losses_db += shadowing
         # From http://4g5gworld.com/blog/5gnr-reference-signals-measurement
+        # rsrp-range in TS 38331 is INTEGER(0..127)
         rsrp = 10 * np.log10(self.cell_power) - path_losses_db
         print(np.mean(rsrp), np.mean(snr), np.mean(bw))
         # RSSI is calculated from the formula RSRP = RSSI - 10 * log_{10} (12 * N) [RSSI = RSRP + log_{10} (12 * N)], with N the number of resource blocks.
         # N is dependent on UE_BW (N = BW / (12 * subcarrier_spacing)). We will assume N = 1 for this test case.
+        # RSSI-Range in TS 38331 is INTEGER(0..76)
         rssi = rsrp + 10 * np.log10(12)
         #RSRQ is calculate as RSRQ = (N * RSRP) / RSSI
+        # RSRQ-Range in TS 38331 is INTEGER(0..127)
         rsrq = rsrp / rssi
 
         bler = np.random.exponential(2, (self.n_ues, 1, 1))
@@ -182,8 +186,12 @@ if __name__ == '__main__':
     snr = np.reshape(snr, (n_ues, n_cells))
     rsrq = np.reshape(rsrq, (n_ues, n_cells))
     cqi = np.reshape(cqi, (n_ues, n_cells))
-    bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=antenna['name']) for antenna in antennae]
+    bbu_descriptors = [e2sim_client.NodebDescriptor(nodeb_id=antenna['gnb_id']) for antenna in antennae]
  
+    print(f'rsrp {rsrp.min()} {rsrp.max()}')
+    print(f'snr {snr.min()} {snr.max()}')
+    print(f'rsrq {rsrq.min()} {rsrq.max()}')
+
     ue_descriptors = list()
 
     print("Starting connection test")

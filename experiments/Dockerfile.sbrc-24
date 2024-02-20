@@ -1,4 +1,4 @@
-FROM docker.io/trbecker/envman-client:0.0.1
+FROM docker.io/trbecker/envman-client:0.0.2
 
 RUN pip install numpy pandas pyyaml
 COPY e2sim_experiment_2 /playpen/
