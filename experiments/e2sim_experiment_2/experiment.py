@@ -223,11 +223,13 @@ if __name__ == '__main__':
 
             start = time.monotonic_ns()
             try:
-                management_api.u_eimsi_admission_put(f'724011{ue:09}', ue_descr)
+                admission_req = UEIMSIAdmissionPutRequest(ue=ue_descr, noded=connection_bbu)
+                management_api.u_eimsi_admission_put(f'724011{ue:09}', admission_req)
                 latency = time.monotonic_ns() - start
                 connected = True
             except Exception as e:
                 latency = time.monotonic_ns() - start
+                print(e)
             
             cbbu = bbu_values[connection_bbu]
             values = f'724011{ue:09},{cbbu[0].nodeb_id},{latency},{cbbu[2]},{connected}'
