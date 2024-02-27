@@ -216,14 +216,15 @@ if __name__ == '__main__':
                 bbu_order = list(snr_ue.argsort())
 
             connection_bbu = bbu_order.pop()
-            print(f"connecting ue 724011{ue:09} to antenna {connection_bbu}")
+            connection_bbu_id = bbu_descriptors[connection_bbu].nodeb_id
+            print(f"connecting ue 724011{ue:09} to antenna {connection_bbu_id}")
             configuration = e2sim_client.Configuration(host=ant_endpoints[connection_bbu])
             api_client = e2sim_client.ApiClient(configuration)
             management_api = e2sim_client.ManagementApi(api_client)
 
             start = time.monotonic_ns()
             try:
-                admission_req = UEIMSIAdmissionPutRequest(ue=ue_descr, noded=connection_bbu)
+                admission_req = e2sim_client.UEIMSIAdmissionPutRequest(ue=ue_descr, nodeb=connection_bbu_id)
                 management_api.u_eimsi_admission_put(f'724011{ue:09}', admission_req)
                 latency = time.monotonic_ns() - start
                 connected = True
