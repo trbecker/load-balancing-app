@@ -54,7 +54,7 @@ class experiment:
         first_subcarrier = ant['frequency'] - ant['bandwidth'] / 2 + ant['subcarrier_spacing'] / 2
         subcarriers = [first_subcarrier + sc * ant['subcarrier_spacing'] for sc in range(n_subcarriers)]
         self.cell_wave_lengths[0, pos] = speed_of_light / np.random.choice(subcarriers, replace=False, size=(4,))
-        self.cell_power[0, pos] = ant['power']
+        self.cell_power[0, pos] = ant['power'] * 1000
 
         return ant
 
