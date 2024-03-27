@@ -1,0 +1,124 @@
+openapi: 3.0.2
+info:
+  title: UE Control API
+  version: "1.0"
+servers:
+- url: https://api.server.test/v1
+tags:
+- description: Testing endpoints
+  name: Testing
+- description: APIs for UE management
+  name: Management
+paths:
+  /UE/{iMSI}/disconnect:
+    put:
+      operationId: u_eimsi_disconnect_put
+      parameters:
+      - explode: false
+        in: path
+        name: iMSI
+        required: true
+        schema:
+          description: International Mobile Subscriber Identification
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: Disconnected
+      x-openapi-router-controller: controllers
+  /UE/{iMSI}/handover:
+    put:
+      operationId: u_eimsi_handover_put
+      parameters:
+      - explode: false
+        in: path
+        name: iMSI
+        required: true
+        schema:
+          description: International Mobile Subscriber Identification
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_UE__iMSI__handover_put_request'
+        required: true
+        x-body-name: ueimsi_handover_put_request
+      responses:
+        "200":
+          description: Handover received
+      x-openapi-router-controller: controllers
+  /UE/{iMSI}/test:
+    put:
+      operationId: u_eimsi_test_put
+      parameters:
+      - explode: false
+        in: path
+        name: iMSI
+        required: true
+        schema:
+          description: International Mobile Subscriber Identification
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: UE exists
+      x-openapi-router-controller: controllers
+  /cell/{gnb_id}/power:
+    put:
+      operationId: cell_gnb_id_power_put
+      parameters:
+      - explode: false
+        in: path
+        name: gnb_id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_cell__gnb_id__power_put_request'
+        x-body-name: cell_gnb_id_power_put_request
+        required: true
+      responses:
+        "202":
+          description: Power set
+      x-openapi-router-controller: controllers
+  /test:
+    get:
+      operationId: test_get
+      responses:
+        "200":
+          description: API is reachable
+      x-openapi-router-controller: controllers
+components:
+  schemas:
+    cell_descriptor:
+      properties:
+        mnc:
+          title: mnc
+          type: integer
+        mcc:
+          title: mcc
+          type: integer
+        nodeb_id:
+          title: nodeb_id
+          type: integer
+      title: cell_descriptor
+      type: object
+    _UE__iMSI__handover_put_request:
+      properties:
+        target_cell:
+          $ref: '#/components/schemas/cell_descriptor'
+      title: _UE__iMSI__handover_put_request
+    _cell__gnb_id__power_put_request:
+      properties:
+        target_cell:
+          $ref: '#/components/schemas/cell_descriptor'
+        target_power:
+          title: target_power
+          type: number
+      title: _cell__gnb_id__power_put_request
