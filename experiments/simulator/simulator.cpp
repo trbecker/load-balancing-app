@@ -18,6 +18,7 @@ public:
     void flowUpdate(const std::string iMSI, const flow_entry &entry);
     void disassociationRequest(const std::shared_ptr<ue_data> ue);
     bool associationRequest(const std::shared_ptr<ue_data> ue, const int32_t &cell);
+
 protected:
     std::unique_ptr<AdmissionClient> admissionClient;
 };
@@ -29,7 +30,7 @@ SimpleObserver::SimpleObserver(const std::string &serverAddress) :
 }
 
 void SimpleObserver::anrUpdate(const std::string iMSI,
-        const std::map<int32_t, std::shared_ptr<anr_entry>> &entries)
+                               const std::map<int32_t, std::shared_ptr<anr_entry>> &entries)
 { 
     std::cout << "Got anr update, nothing to do here" << std::endl;
 }
@@ -44,8 +45,8 @@ void SimpleObserver::disassociationRequest(const std::shared_ptr<ue_data> ue)
     std::cout << "Got disassociation request, nothing to do here" << std::endl;
 }
 
-bool
-SimpleObserver::associationRequest(const std::shared_ptr<ue_data> ue, const int32_t &cell) {
+bool SimpleObserver::associationRequest(const std::shared_ptr<ue_data> ue, const int32_t &cell)
+{
     float sinr = 0;
     std::cout << "Got association request, asking it" << std::endl;
     auto anr_gnb = ue->anr.find(gnbid);

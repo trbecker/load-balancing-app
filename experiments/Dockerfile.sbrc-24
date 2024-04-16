@@ -1,6 +1,9 @@
 ARG REPO_REV=main
 FROM docker.io/trbecker/envman_base:${REPO_REV}
 
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y curl \
+    && apt-get clean
 RUN pip install numpy pandas pyyaml
 COPY e2sim_experiment_2 /playpen/
 RUN mkdir /data

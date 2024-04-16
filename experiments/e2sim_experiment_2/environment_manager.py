@@ -49,6 +49,8 @@ class UE:
             bler = list(self.bler[0]) * len(cells)
             cqi  = list(self.cqi)
             return list(zip(cells, sinr, rsrp, rsrq, bler, cqi))
+        if attr == 'idx':
+            return self.__position
         raise AttributeError(f'{attr} is not defined for UE')
 
     def get_connection_parameters(self, target_cell):
@@ -57,12 +59,24 @@ class UE:
                 return metrics
         raise NameError(f'{target_cell.id} is not defined')
 
+    def connect(self, target_cell):
+        print(f'{self.id} is connectiong to {target_cell.gnb_id}')
+        if not self.__simulator.connection_manager:
+            raise RuntimeError("Missing connection manager")
+        self.__simulator.connection_manager.connect(self, [target_cell])
 
     def handover(self, target_cell):
-        print(f'{self.id} is being handed over to {target_cell.nodeb_id}')
+        print(f'{self.id} is being handed over to {target_cell.gnb_id}')
+        if not self.__simulator.connection_manager:
+            raise RuntimeError("missing connection manager")
+        self.disconnect()
+        self.connect(target_cell)
 
     def disconnect(self):
         print(f'{self.id} is disconnecting')
+        if not self.__simulator.connection_manager:
+            raise RuntimeError("missing connection manager")
+        self.__simulator.connection_manager.disconnect(self)
 
 class Cell:
     def __init__(self, simulator, position, ant):
@@ -98,6 +112,7 @@ class Simulator:
         self.subcarrier_spacing = np.zeros((1, n_cells, 1))
         self.current_ue = 0
         self.current_cell = 0
+        self.connection_manager = None
 
         self.gamma = 1
 
@@ -195,8 +210,12 @@ class Simulator:
         self.sinr, self.rsrp, self.rsrq, self.bler, self.cqi = snr, rsrp, rsrq, bler, cqi
 
         return snr, rsrp, rsrq, bler, cqi
-    
-def build_simulation_from_yaml(configfile):
+
+def __ue_random_position():
+    return np.random.uniform(0, 100, (1, 1, 3))
+
+def build_simulation_from_yaml(configfile, position_function):
+    import yaml
     with open(configfile, 'r') as fp:
         config = yaml.safe_load(fp)
 
@@ -205,12 +224,12 @@ def build_simulation_from_yaml(configfile):
     simulator = Simulator(n_ues, n_cells)
 
     antennae = [simulator.add_cell(antenna) for antenna in config['antennae']]
-    ues = [simulator.add_ue(random_position(), 2) for i in range(n_ues)]
+    ues = [simulator.add_ue(position_function(), 2) for i in range(n_ues)]
 
     return simulator, antennae, ues
 
-def prepare_simulation(configfile):
-    simulation, antennae, ues = build_simulation_from_yaml(configfile)
+def prepare_simulation(configfile, position_function=__ue_random_position):
+    simulation, antennae, ues = build_simulation_from_yaml(configfile, position_function)
     n_ues = simulation.n_ues
     n_cells = simulation.n_cells
     controllers.simulator = simulation

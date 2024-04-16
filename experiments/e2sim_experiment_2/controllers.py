@@ -7,6 +7,7 @@ from typing import Union
 from ue_server.models.cell_gnb_id_power_put_request import CellGnbIdPowerPutRequest  # noqa: E501
 from ue_server.models.ueimsi_handover_put_request import UEIMSIHandoverPutRequest  # noqa: E501
 from ue_server import util
+import traceback
 
 simulator = None
 
@@ -31,6 +32,7 @@ def cell_gnb_id_power_put(gnb_id, cell_gnb_id_power_put_request):  # noqa: E501
     except KeyError as e:
         return (f'gnb {gnb_id} net defined', 404)
     except Exception as e:
+        traceback.print_exc()
         return (f'{e}', 500)
     
 
@@ -64,7 +66,8 @@ def u_eimsi_disconnect_put(i_msi):  # noqa: E501
     except KeyError as e:
         return (f'No UE with id {i_msi}', 404)
     except Exception as e:
-        return (f'Error {e} ({i_msi} {simulator} {simulator.get_ue(i_msi)})', 500)
+        traceback.print_exc()
+        return (f'Error {e} ({i_msi} {simulator} {simulator.get_ue(i_msi)}) {traceback.format_exc()}', 500)
 
 
 def u_eimsi_handover_put(i_msi, ueimsi_handover_put_request):  # noqa: E501
@@ -83,14 +86,17 @@ def u_eimsi_handover_put(i_msi, ueimsi_handover_put_request):  # noqa: E501
     try:
         if connexion.request.is_json:
             ueimsi_handover_put_request = UEIMSIHandoverPutRequest.from_dict(connexion.request.get_json())  # noqa: E501
-            simulator.get_ue(i_msi).handover(ueimsi_handover_put_request.target_cell)
+            target_cell = ueimsi_handover_put_request.target_cell
+            target_cell = simulator.get_cell(target_cell.nodeb_id)
+            simulator.get_ue(i_msi).handover(target_cell)
             return ('Accepted', 202)
         else:
             return ('Accepting JSON only', 400)
     except KeyError as e:
         return (f'UE {i_msi} is not defined', 404)
     except Exception as e:
-        return (f'{e}', 500)
+        traceback.print_exc()
+        return (f'{e} {traceback.format_exc()}', 500)
 
 
 def u_eimsi_test_put(i_msi):  # noqa: E501
@@ -110,6 +116,7 @@ def u_eimsi_test_put(i_msi):  # noqa: E501
         except KeyError as e:
             return (f'{i_msi} doesn\'t exist', 404)
         except Exception as e:
+            traceback.print_exc()
             return (f'{e}', 500)
     return ('Simulator is not set', 500)
 

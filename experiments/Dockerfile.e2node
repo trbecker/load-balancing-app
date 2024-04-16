@@ -7,7 +7,7 @@ ARG ACGRPC_REV=main
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     cmake build-essential autoconf libtool pkg-config git \
     libgrpc++-dev libprotobuf-dev protobuf-c-compiler \
-    protobuf-compiler && apt-get clean
+    protobuf-compiler curl && apt-get clean
 
 RUN rm -fr /playpen && mkdir /playpen
 WORKDIR /playpen
