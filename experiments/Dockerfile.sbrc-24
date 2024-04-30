@@ -1,5 +1,5 @@
-ARG GIT_VERSION=main
-FROM docker.io/trbecker/envman_base:${GIT_VERSION}
+ARG REPO_REV=main
+FROM docker.io/trbecker/envman_base:${REPO_REV}
 
 RUN pip install numpy pandas pyyaml
 COPY e2sim_experiment_2 /playpen/

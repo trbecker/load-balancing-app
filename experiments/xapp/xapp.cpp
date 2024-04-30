@@ -17,9 +17,10 @@ class Database {
 public:
     Database(std::string &path);
     virtual ~Database();
-    int insert_admission_request(const std::string &imsi, const std::string &gnb, const float sinr, const bool result);
-    int retrieve_admissions_on_gnb(const std::string &gnb);
-    int retrieve_last_second_admissions (const std::string &gnb);
+    int insert_admission_request(const std::string &imsi, const int32_t gnb, const float sinr, const bool result);
+    int retrieve_admissions_on_gnb(const int32_t gnb);
+    int retrieve_last_second_admissions(const int32_t gnb);
+
 private:
     sqlite3 *database;
 };
@@ -35,7 +36,7 @@ Database::Database(std::string &path) : database(NULL)
 
     std::string sql("CREATE TABLE IF NOT EXISTS ADMISSIONS("
         "TIMESTAMP DATTETIME DEFAULT CURRENT_TIMESTAMP,"
-        "GNB CHAR NOT NULL,"
+        "GNB INT NOT NULL,"
         "IMSI CHAR NOT NULL,"
         "SINR REAL DEFAULT 0,"
         "LATENCY INT DEFAULT 0,"
@@ -48,14 +49,14 @@ Database::Database(std::string &path) : database(NULL)
     }
 }
 
-int Database::insert_admission_request(const std::string &imsi, const std::string &gnb, const float sinr, const bool result)
+int Database::insert_admission_request(const std::string &imsi, const int32_t gnb, const float sinr, const bool result)
 {
     int rc;
     std::stringstream sstream;
     char *errmsg = NULL;
 
     sstream << "INSERT INTO ADMISSIONS (GNB, IMSI, SINR, RESULT) VALUES ("
-            << "\"" << gnb << "\", "
+            << gnb << ", "
             << "\"" << imsi << "\", "
             << "0.0, "
             << (result ? "1" : "0") << ");";
@@ -72,13 +73,14 @@ int Database::insert_admission_request(const std::string &imsi, const std::strin
     return 0;
 }
 
-int Database::retrieve_admissions_on_gnb(const string &gnb) {
+int Database::retrieve_admissions_on_gnb(const int32_t gnb)
+{
     int retval = -1;
     char *errmsg;
     sqlite3_stmt *stmt;
     std::stringstream sstream;
     
-    sstream << "SELECT count(gnb) FROM ADMISSIONS WHERE GNB = \"" << gnb << "\";";
+    sstream << "SELECT count(gnb) FROM ADMISSIONS WHERE GNB = " << gnb << ";";
     string sql = sstream.str();
 
     sqlite3_prepare(database, sql.c_str(), sql.size(), &stmt, NULL);
@@ -92,13 +94,14 @@ int Database::retrieve_admissions_on_gnb(const string &gnb) {
     return retval;
 }
 
-int Database::retrieve_last_second_admissions(const std::string &gnb) {
+int Database::retrieve_last_second_admissions(const int32_t gnb)
+{
     int retval = -1;
     char *errmsg;
     sqlite3_stmt *stmt;
     std::stringstream sstream;
 
-    sstream << "SELECT count(imsi) FROM ADMISSIONS WHERE GNB = \"" << gnb << "\""
+    sstream << "SELECT count(imsi) FROM ADMISSIONS WHERE GNB = " << gnb <<
             "AND RESULT = 1 AND timestamp >= Datetime('now', '-1 seconds')";
     string sql = sstream.str();
 
@@ -127,7 +130,7 @@ public:
     JustOk() : limit_admitted(false), limit_admission_per_second(false),
             admitted_limit(0), admission_per_second_limit(0) { /* pass*/ }
 
-    bool admission(const string &imsi, const string &gnb, const float sinr) {
+    bool admission(const string &imsi, const int32_t gnb, const float sinr) {
         //std::cout << "admission of " << imsi << " on " << gnb << std::endl;
 
         // if (limit_admitted) result = database->retrieve_admissions_on_gnb(gnb) < admitted_limit; (but possibly with no branch)
