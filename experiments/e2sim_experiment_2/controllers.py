@@ -4,6 +4,8 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
+import numpy as np
+
 from ue_server.models.cell_gnb_id_power_put_request import CellGnbIdPowerPutRequest  # noqa: E501
 from ue_server.models.ueimsi_handover_put_request import UEIMSIHandoverPutRequest  # noqa: E501
 from ue_server import util
@@ -26,7 +28,11 @@ def cell_gnb_id_power_put(gnb_id, cell_gnb_id_power_put_request):  # noqa: E501
     try:
         if connexion.request.is_json:
             cell_gnb_id_power_put_request = CellGnbIdPowerPutRequest.from_dict(connexion.request.get_json())  # noqa: E501
-            simulator.get_cell(gnb_id).set_power(cell_gnb_id_power_put_request.target_power)
+            target_db = cell_gnb_id_power_put_request.target_power
+            target_power = np.power(10, target_db / 10)
+            simulator.get_cell(gnb_id).set_power(target_power)
+            print(f"Stting the power of gnb_id {gnb_id} to {target_power} mW ({target_db} dBm)")
+            return (f'Accepted, power is now {target_power} mW', 202)
         else:
             return ('Invalid format', 400)
     except KeyError as e:
@@ -126,7 +132,7 @@ def start_server(port):
     app.add_api('openapi.yaml',
                 arguments={'title': 'UE Control API'},
                 pythonic_params=True)
-    app.run(port=8080)
+    app.run(port=port)
 
 if __name__ == '__main__':
     import controllers
