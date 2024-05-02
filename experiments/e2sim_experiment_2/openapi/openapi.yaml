@@ -100,10 +100,10 @@ components:
       properties:
         mnc:
           title: mnc
-          type: integer
+          type: string
         mcc:
           title: mcc
-          type: integer
+          type: string
         nodeb_id:
           title: nodeb_id
           type: integer
